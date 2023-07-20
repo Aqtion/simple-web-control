@@ -31,6 +31,7 @@ def disarm_rov(mav_connection):
     mav_connection.motors_disarmed_wait()
     print("Disarmed!")
 
+
 def stop_all():
     """
     Stop all motors. Sliders are not affected

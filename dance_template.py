@@ -5,7 +5,11 @@ import socket
 import numpy as np
 
 
+is_armed = False
+
+
 def arm_rov(mav_connection):
+    global is_armed
     """
     Arm the ROV, wait for confirmation
     """
@@ -13,6 +17,7 @@ def arm_rov(mav_connection):
     print("Waiting for the vehicle to arm")
     mav_connection.motors_armed_wait()
     print("Armed!")
+    is_armed = True
 
 
 def disarm_rov(mav_connection):
@@ -59,11 +64,17 @@ if __name__ == "__main__":
     Motors power ranges from -100 to 100
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(("", 8400))
-        s.listen(5)
+        s.listen()
         conn, addr = s.accept()
         while True:
-            command = conn.recv(1024).decode()
+            try:
+                command = conn.recv(1024, socket.MSG_DONTWAIT).decode()
+            except:
+                if is_armed:
+                    run_motors_timed(mav_connection, 0.1, [0, 0, 0, 0, 0, 0])
+                continue
             if command.strip() == "arm".lower():
                 arm_rov(mav_connection)
             elif command.strip() == "disarm".lower():
@@ -72,20 +83,28 @@ if __name__ == "__main__":
                 try:
                     arr = np.array(command.split(" ")).astype(float)
                 except:
-                    conn.send("Invalid input received\n".encode())
+                    conn.send(
+                        "Invalid input received\n------------------------------------\n".encode()
+                    )
                     continue
 
                 if len(arr) != 7:
-                    conn.send("Invalid # of parameters received\n".encode())
+                    conn.send(
+                        "Invalid # of parameters received\n------------------------------------\n".encode()
+                    )
                     continue
 
                 powers = arr[0 : len(arr)]
                 if arr[-1] <= 0:
-                    conn.send("Time must be positive\n".encode())
+                    conn.send(
+                        "Time must be positive\n------------------------------------\n".encode()
+                    )
                     continue
 
                 print("Powers: ", powers)
+                print("\n")
                 print("Time: ", arr[-1])
+                conn.send("------------------------------------\n".encode())
 
                 run_motors_timed(mav_connection, arr[-1], powers.tolist())
     ####

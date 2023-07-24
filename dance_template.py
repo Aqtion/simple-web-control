@@ -77,8 +77,15 @@ if __name__ == "__main__":
                 continue
             if command.strip() == "arm".lower():
                 arm_rov(mav_connection)
+                conn.send("Armed\n------------------------------------\n".encode())
+                conn.send(
+                    "Input formatting:\nFirst six numbers are powers to each thruster, last number is the duration of the command\nExample input: 100 100 100 -100 -100 -100 10\n"
+                )
             elif command.strip() == "disarm".lower():
                 disarm_rov(mav_connection)
+                conn.send("Disarmed\n------------------------------------\n".encode())
+            elif command.strip() == "close".lower():
+                break
             else:
                 try:
                     arr = np.array(command.split(" ")).astype(float)
@@ -100,13 +107,15 @@ if __name__ == "__main__":
                         "Time must be positive\n------------------------------------\n".encode()
                     )
                     continue
-
                 print("Powers: ", powers)
                 print("\n")
                 print("Time: ", arr[-1])
-                conn.send("------------------------------------\n".encode())
+                conn.send(
+                    "------------------------------------\nData received\n------------------------------------\n".encode()
+                )
 
                 run_motors_timed(mav_connection, arr[-1], powers.tolist())
+        s.close()
     ####
     # Disarm ROV and exit
     ####

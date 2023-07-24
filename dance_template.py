@@ -79,7 +79,7 @@ if __name__ == "__main__":
                 arm_rov(mav_connection)
                 conn.send("Armed\n------------------------------------\n".encode())
                 conn.send(
-                    "Input formatting:\nFirst six numbers are powers to each thruster, last number is the duration of the command\nExample input: 100 100 100 -100 -100 -100 10\n"
+                    "Input formatting:\nFirst six numbers are powers to each thruster, last number is the duration of the command\nExample input: 100 100 100 -100 -100 -100 10\n".encode()
                 )
             elif command.strip() == "disarm".lower():
                 disarm_rov(mav_connection)
